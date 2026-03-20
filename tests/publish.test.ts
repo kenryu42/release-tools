@@ -147,9 +147,7 @@ describe("runPublish", () => {
   });
 
   test("dry-run fails with dirty working directory", async () => {
-    const runner = createMockRunner([
-      ["git status --porcelain", " M src/dirty.ts\n"],
-    ]);
+    const runner = createMockRunner([["git status --porcelain", " M src/dirty.ts\n"]]);
 
     const fetchFn = makeFetch({
       "/latest": { ok: true, status: 200, data: { version: "1.0.0" } },

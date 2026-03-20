@@ -134,9 +134,7 @@ async function preflight(
 
   if (isDryRun) {
     if (status.trim()) {
-      throw new Error(
-        `Dry-run requires clean working directory. Uncommitted changes:\n${status}`
-      );
+      throw new Error(`Dry-run requires clean working directory. Uncommitted changes:\n${status}`);
     }
   } else {
     const unexpectedChanges = collectUnexpectedChanges(status, releaseFiles);

@@ -133,9 +133,9 @@ describe("computeSha256", () => {
     });
 
     try {
-      await expect(
-        computeSha256(`http://127.0.0.1:${server.port}/tarball.tar.gz`)
-      ).rejects.toThrow("Failed to download tarball: Internal Server Error");
+      await expect(computeSha256(`http://127.0.0.1:${server.port}/tarball.tar.gz`)).rejects.toThrow(
+        "Failed to download tarball: Internal Server Error"
+      );
     } finally {
       server.stop(true);
     }

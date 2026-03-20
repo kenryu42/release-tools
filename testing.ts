@@ -2,9 +2,7 @@ import type { CommandRunner } from "./changelog.ts";
 
 export type RunnerResponse = string | Error;
 
-export function createMockRunner(
-  responses: readonly [string, RunnerResponse][]
-): CommandRunner {
+export function createMockRunner(responses: readonly [string, RunnerResponse][]): CommandRunner {
   return (strings: TemplateStringsArray, ...values: readonly string[]) => {
     const command = strings.reduce((accumulator, part, index) => {
       const value = values[index] ?? "";

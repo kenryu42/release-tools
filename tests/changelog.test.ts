@@ -85,11 +85,9 @@ describe("generateChangelog", () => {
     const runner = createMockRunner([
       [
         'git log v1.0.0..HEAD --oneline --format="%h %s"',
-        [
-          "a1b2c3d perf: optimize loop",
-          "b2c3d4e feat: add feature",
-          "c3d4e5f chore: cleanup",
-        ].join("\n"),
+        ["a1b2c3d perf: optimize loop", "b2c3d4e feat: add feature", "c3d4e5f chore: cleanup"].join(
+          "\n"
+        ),
       ],
     ]);
 
@@ -150,10 +148,7 @@ describe("getContributors", () => {
       JSON.stringify({ login: "bob", message: "fix(cli): handle empty notes\n\nbody" }),
     ].join("\n");
     const runner = createMockRunner([
-      [
-        'gh api "/repos/example/repo/compare/v1.2.3...HEAD" --jq',
-        compareOutput,
-      ],
+      ['gh api "/repos/example/repo/compare/v1.2.3...HEAD" --jq', compareOutput],
     ]);
 
     const contributors = await getContributors("v1.2.3", {
@@ -255,10 +250,7 @@ describe("runChangelog", () => {
           "c3d4e5f fix(parser): handle scoped type",
         ].join("\n"),
       ],
-      [
-        'gh api "/repos/example/repo/compare/v1.2.3...HEAD" --jq',
-        compareOutput,
-      ],
+      ['gh api "/repos/example/repo/compare/v1.2.3...HEAD" --jq', compareOutput],
     ]);
 
     await runChangelog({

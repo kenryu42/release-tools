@@ -1,7 +1,14 @@
-import { access, readdir, readFile, rm, unlink } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { access, readdir, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { createInterface } from "node:readline";
-import { buildManagedFileContent, MANAGED_FILES } from "@/cli/commands/init.ts";
+import {
+  buildManagedFileContent,
+  CACHE_FILE,
+  MANAGED_FILES,
+  type ProjectSetupCache,
+  RELEASE_TOOLS_DIR,
+} from "@/cli/commands/init.ts";
 import type { ReleaseToolsConfig } from "@/cli/config.ts";
 import { loadConfig } from "@/cli/config.ts";
 
@@ -10,6 +17,7 @@ interface DeinitOptions {
   log?: (message: string) => void;
   confirm?: (message: string) => Promise<boolean>;
   loadConfig?: (cwd: string) => Promise<ReleaseToolsConfig>;
+  exec?: (command: string[]) => Promise<void>;
 }
 
 async function promptConfirm(message: string): Promise<boolean> {
@@ -31,6 +39,87 @@ async function isDirectoryEmpty(dirPath: string): Promise<boolean> {
   }
 }
 
+async function defaultExec(cwd: string, command: string[]): Promise<void> {
+  const proc = Bun.spawn(command, { cwd, stdout: "inherit", stderr: "inherit" });
+  const exitCode = await proc.exited;
+  if (exitCode !== 0) throw new Error(`Command failed: ${command.join(" ")}`);
+}
+
+async function teardownProject(options: {
+  cwd: string;
+  log: (message: string) => void;
+  exec: (command: string[]) => Promise<void>;
+}): Promise<void> {
+  const { cwd, log, exec } = options;
+  const cachePath = join(cwd, CACHE_FILE);
+
+  if (!existsSync(cachePath)) {
+    log("⏭️  Skipped project setup restoration (no cache file)");
+    return;
+  }
+
+  const cache: ProjectSetupCache = JSON.parse(await readFile(cachePath, "utf-8"));
+
+  // Restore package.json
+  const pkgPath = join(cwd, "package.json");
+  const pkg = JSON.parse(await readFile(pkgPath, "utf-8"));
+
+  for (const [key, original] of Object.entries(cache.scripts)) {
+    if (original === null) {
+      delete pkg.scripts?.[key];
+    } else {
+      pkg.scripts ??= {};
+      pkg.scripts[key] = original;
+    }
+  }
+
+  if (cache.lintStaged === null) {
+    delete pkg["lint-staged"];
+  } else {
+    pkg["lint-staged"] = cache.lintStaged;
+  }
+
+  await writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+  log("✓ Restored package.json");
+
+  // Restore tsconfig.json
+  if (cache.tsconfig !== null) {
+    const tsconfigPath = join(cwd, "tsconfig.json");
+    if (existsSync(tsconfigPath)) {
+      const tsconfig = JSON.parse(await readFile(tsconfigPath, "utf-8"));
+
+      if (cache.tsconfig.baseUrl === null) {
+        delete tsconfig.compilerOptions?.baseUrl;
+      } else {
+        tsconfig.compilerOptions ??= {};
+        tsconfig.compilerOptions.baseUrl = cache.tsconfig.baseUrl;
+      }
+
+      if (cache.tsconfig.paths === null) {
+        delete tsconfig.compilerOptions?.paths;
+      } else {
+        tsconfig.compilerOptions ??= {};
+        tsconfig.compilerOptions.paths = cache.tsconfig.paths;
+      }
+
+      await writeFile(tsconfigPath, `${JSON.stringify(tsconfig, null, 2)}\n`);
+      log("✓ Restored tsconfig.json");
+    } else {
+      log("⚠️  Skipped tsconfig.json restoration (file not found)");
+    }
+  }
+
+  // Uninstall deps
+  if (cache.installedDeps.length > 0) {
+    await exec(["bun", "remove", ...cache.installedDeps]);
+    log(`✓ Uninstalled dev dependencies: ${cache.installedDeps.join(", ")}`);
+  }
+
+  // Delete cache file
+  await unlink(cachePath);
+  log(`✓ Removed ${CACHE_FILE}`);
+}
+
 export async function run(options: DeinitOptions): Promise<void> {
   const {
     cwd,
@@ -38,6 +127,7 @@ export async function run(options: DeinitOptions): Promise<void> {
     confirm = promptConfirm,
     loadConfig: loadCfg = loadConfig,
   } = options;
+  const exec = options.exec ?? ((cmd: string[]) => defaultExec(cwd, cmd));
 
   let expectedContent: Record<string, string> | null = null;
   try {
@@ -80,6 +170,14 @@ export async function run(options: DeinitOptions): Promise<void> {
   const githubDir = join(cwd, ".github");
   if (await isDirectoryEmpty(githubDir)) {
     await rm(githubDir, { recursive: true });
+  }
+
+  await teardownProject({ cwd, log, exec });
+
+  // Clean up .release-tools/ directory if empty
+  const releaseToolsDir = join(cwd, RELEASE_TOOLS_DIR);
+  if (await isDirectoryEmpty(releaseToolsDir)) {
+    await rm(releaseToolsDir, { recursive: true });
   }
 }
 

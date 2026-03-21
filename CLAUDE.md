@@ -10,7 +10,7 @@ Tests must produce no console output on success. Inject a no-op `log` (or equiva
 
 ## What This Is
 
-Shared release automation toolkit for 420024-lab projects. Provides three core modules (publish, changelog, homebrew) as both a library (package exports) and a CLI (`release-tools`). Consuming projects add a `release-tools.config.ts` and get CI/publish workflows via `release-tools init`.
+Shared release automation CLI for 420024-lab projects. Provides three core modules (publish, changelog, homebrew) behind a single CLI (`release-tools`). Consuming projects add a `release-tools.config.ts` and get CI/publish workflows via `release-tools init`.
 
 ## Commands
 
@@ -27,7 +27,7 @@ bun run check            # typecheck + knip + lint + test (full gate)
 
 ## Architecture
 
-### Library modules (root-level `.ts` files)
+### Core modules (`src/`)
 
 - **`changelog.ts`** - Git log parsing, contributor fetching via `gh api`, release note formatting. All functions accept an optional `CommandRunner` for testability.
 - **`publish.ts`** - Full publish orchestration: version bump, preflight checks, npm publish, git tag/push, GitHub release creation. Supports `--dry-run` and `--recover` modes. Requires `CI=true` for real publishes.
@@ -53,7 +53,6 @@ Tests live in `tests/` mirroring the source layout (`tests/cli/` for CLI tests).
 
 - **`CommandRunner` injection**: The `$` tagged template from Bun is the default shell runner. Every function that shells out accepts an optional `CommandRunner`, allowing tests to substitute `createMockRunner`. The runner uses tagged template literal syntax: `` runner`git log ...`.text() ``.
 - **Config-driven CLI**: The CLI reads `release-tools.config.ts` (via dynamic `import()`) and adapts it to each module's options type. The `defineConfig()` export provides type safety for consuming projects.
-- **Package exports**: Consuming projects can import individual modules (`release-tools/publish`, `release-tools/changelog`, etc.) for programmatic use, or use the CLI via `bunx release-tools`.
 
 ## Formatting
 

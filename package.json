@@ -39,5 +39,8 @@
       "biome check --write --no-errors-on-unmatched"
     ]
   },
+  "exports": {
+    "./config": "./src/cli/config.ts"
+  },
   "private": true
 }

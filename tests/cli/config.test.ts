@@ -43,7 +43,7 @@ describe("loadConfig", () => {
   });
 
   test("throws when config file does not exist", async () => {
-    await expect(loadConfig(tempDir)).rejects.toThrow("release-tools.config.ts");
+    await expect(loadConfig(tempDir)).rejects.toThrow(".release-tools/config.ts");
   });
 
   test("loads config from a valid file", async () => {
@@ -53,7 +53,9 @@ describe("loadConfig", () => {
         repo: "owner/test-pkg",
       };
     `;
-    await writeFile(join(tempDir, "release-tools.config.ts"), configContent);
+    const { mkdir } = await import("node:fs/promises");
+    await mkdir(join(tempDir, ".release-tools"), { recursive: true });
+    await writeFile(join(tempDir, ".release-tools/config.ts"), configContent);
     const config = await loadConfig(tempDir);
     expect(config).toEqual({
       packageName: "test-pkg",

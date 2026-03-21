@@ -17,7 +17,7 @@ export function getVersion(
 
 export function getHomebrewConfig(config: ReleaseToolsConfig) {
   if (!config.homebrew) {
-    throw new Error("Homebrew not configured in release-tools.config.ts");
+    throw new Error("Homebrew not configured in .release-tools/config.ts");
   }
   return config.homebrew;
 }

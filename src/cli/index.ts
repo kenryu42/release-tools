@@ -51,7 +51,7 @@ Usage:
   release-tools <command> [options]
 
 Commands:
-  init              Scaffold release-tools.config.ts and GitHub Actions workflows
+  init              Scaffold .release-tools/config.ts and GitHub Actions workflows
   deinit            Remove files created by init
   publish           Publish a new version to npm and create GitHub release
   changelog         Generate and print changelog

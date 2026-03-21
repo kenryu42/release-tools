@@ -20,11 +20,11 @@ export function defineConfig(config: ReleaseToolsConfig): ReleaseToolsConfig {
 }
 
 export async function loadConfig(cwd: string): Promise<ReleaseToolsConfig> {
-  const configPath = join(cwd, "release-tools.config.ts");
+  const configPath = join(cwd, ".release-tools/config.ts");
 
   if (!existsSync(configPath)) {
     throw new Error(
-      `Config file not found: release-tools.config.ts\nRun "release-tools init" to create one.`
+      `Config file not found: .release-tools/config.ts\nRun "release-tools init" to create one.`
     );
   }
 

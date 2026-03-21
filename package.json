@@ -32,6 +32,9 @@
   "knip": {
     "ignoreDependencies": [
       "lint-staged"
+    ],
+    "ignore": [
+      ".release-tools/config.ts"
     ]
   },
   "lint-staged": {

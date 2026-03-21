@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  buildReleaseNotes,
   formatReleaseNotes,
   generateChangelog,
   getContributors,
@@ -217,6 +218,48 @@ describe("getContributors", () => {
     });
 
     expect(contributors).toEqual([]);
+  });
+});
+
+describe("buildReleaseNotes", () => {
+  test("combines changelog and contributors concurrently", async () => {
+    const compareOutput = [
+      JSON.stringify({ login: "alice", message: "feat: improve output\n\nbody" }),
+    ].join("\n");
+    const runner = createMockRunner([
+      [
+        'git log v1.0.0..HEAD --oneline --format="%h %s"',
+        ["a1b2c3d feat: add feature", "b2c3d4e chore: update docs"].join("\n"),
+      ],
+      ['gh api "/repos/example/repo/compare/v1.0.0...HEAD" --jq', compareOutput],
+    ]);
+
+    const notes = await buildReleaseNotes("v1.0.0", {
+      repo: "example/repo",
+      runner,
+    });
+
+    expect(notes).toEqual([
+      "- a1b2c3d feat: add feature",
+      "",
+      "**Thank you to 1 community contributor:**",
+      "- @alice:",
+      "  - feat: improve output",
+    ]);
+  });
+
+  test("returns fallback message when no changes", async () => {
+    const runner = createMockRunner([
+      ['git log v1.0.0..HEAD --oneline --format="%h %s"', ""],
+      ['gh api "/repos/example/repo/compare/v1.0.0...HEAD"', new Error("API error")],
+    ]);
+
+    const notes = await buildReleaseNotes("v1.0.0", {
+      repo: "example/repo",
+      runner,
+    });
+
+    expect(notes).toEqual(["No changes in this release"]);
   });
 });
 

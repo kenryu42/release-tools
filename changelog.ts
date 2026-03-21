@@ -139,6 +139,27 @@ export async function getContributors(
   return notes;
 }
 
+export type BuildReleaseNotesOptions = {
+  repo: string;
+  excludedAuthors?: string[];
+  commitPattern?: RegExp;
+  runner?: CommandRunner;
+};
+
+export async function buildReleaseNotes(
+  previousTag: string,
+  options: BuildReleaseNotesOptions
+): Promise<string[]> {
+  const [changelog, contributors] = await Promise.all([
+    generateChangelog(previousTag, {
+      runner: options.runner,
+      commitPattern: options.commitPattern,
+    }),
+    getContributors(previousTag, options),
+  ]);
+  return formatReleaseNotes(changelog, contributors);
+}
+
 export type RunChangelogOptions = {
   repo: string;
   excludedAuthors?: string[];
@@ -157,17 +178,12 @@ export async function runChangelog(options: RunChangelogOptions): Promise<void> 
     return;
   }
 
-  const changelog = await generateChangelog(previousTag, {
-    runner,
-    commitPattern: options.commitPattern,
-  });
-  const contributors = await getContributors(previousTag, {
+  const notes = await buildReleaseNotes(previousTag, {
     repo: options.repo,
     excludedAuthors: options.excludedAuthors,
     commitPattern: options.commitPattern,
     runner,
   });
-  const notes = formatReleaseNotes(changelog, contributors);
 
   log(notes.join("\n"));
 }

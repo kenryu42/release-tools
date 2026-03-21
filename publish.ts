@@ -1,6 +1,6 @@
 import { $ } from "bun";
 import type { CommandRunner } from "./changelog.ts";
-import { formatReleaseNotes, generateChangelog, getContributors } from "./changelog.ts";
+import { buildReleaseNotes } from "./changelog.ts";
 
 export type BumpType = "major" | "minor" | "patch";
 type FetchFn = (input: string | URL) => Promise<Response>;
@@ -258,12 +258,10 @@ async function runDryRun(
     if (config.generateNotes) {
       notes = await config.generateNotes(`v${previousVersion}`);
     } else {
-      const changelog = await generateChangelog(`v${previousVersion}`, { runner });
-      const contributors = await getContributors(`v${previousVersion}`, {
+      notes = await buildReleaseNotes(`v${previousVersion}`, {
         repo: config.packageName,
         runner,
       });
-      notes = formatReleaseNotes(changelog, contributors);
     }
 
     log("\n--- Release Notes ---");
@@ -418,12 +416,10 @@ export async function runPublish(options: PublishOptions): Promise<void> {
   if (config.generateNotes) {
     notes = await config.generateNotes(`v${previousForChangelog}`);
   } else {
-    const changelog = await generateChangelog(`v${previousForChangelog}`, { runner });
-    const contributors = await getContributors(`v${previousForChangelog}`, {
+    notes = await buildReleaseNotes(`v${previousForChangelog}`, {
       repo: config.packageName,
       runner,
     });
-    notes = formatReleaseNotes(changelog, contributors);
   }
 
   if (config.build) {

@@ -1,13 +1,13 @@
 import { $ } from "bun";
-import type { CommandRunner } from "./changelog.ts";
+import type { CommandRunner } from "@/changelog.ts";
 
-export type HomebrewConfig = {
+type HomebrewConfig = {
   tapRepo: string;
   formulaPath: string;
   sourceRepo: string;
 };
 
-export type UpdateHomebrewDeps = {
+type UpdateHomebrewDeps = {
   config: HomebrewConfig;
   run?: CommandRunner;
   computeSha?: (url: string) => Promise<string>;

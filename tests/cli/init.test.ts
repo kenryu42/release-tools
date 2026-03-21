@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { run } from "../../cli/commands/init.ts";
+import { run } from "@/cli/commands/init.ts";
 
 const noop = () => {};
 

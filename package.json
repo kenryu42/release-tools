@@ -9,14 +9,7 @@
     "email": "jliew@420024lab.com"
   },
   "bin": {
-    "release-tools": "./cli/index.ts"
-  },
-  "exports": {
-    "./config": "./cli/config.ts",
-    "./publish": "./publish.ts",
-    "./changelog": "./changelog.ts",
-    "./homebrew": "./homebrew.ts",
-    "./testing": "./testing.ts"
+    "release-tools": "./src/cli/index.ts"
   },
   "scripts": {
     "test": "bun test",

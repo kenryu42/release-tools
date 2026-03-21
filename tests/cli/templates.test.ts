@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import type { ReleaseToolsConfig } from "../../cli/config.ts";
+import type { ReleaseToolsConfig } from "@/cli/config.ts";
 import {
   generateCiWorkflow,
   generateConfigTemplate,
   generateLintWorkflow,
   generatePublishWorkflow,
-} from "../../cli/templates/workflows.ts";
+} from "@/cli/templates/workflows.ts";
 
 describe("generateConfigTemplate", () => {
   test("generates valid TypeScript with defineConfig import", () => {

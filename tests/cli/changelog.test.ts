@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { buildChangelogOptions } from "../../cli/commands/changelog.ts";
-import type { ReleaseToolsConfig } from "../../cli/config.ts";
+import { buildChangelogOptions } from "@/cli/commands/changelog.ts";
+import type { ReleaseToolsConfig } from "@/cli/config.ts";
 
 describe("buildChangelogOptions", () => {
   test("passes repo and excludedAuthors from config", () => {

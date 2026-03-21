@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import { createMockRunner } from "tests/testing";
 import {
   bumpVersion,
   collectUnexpectedChanges,
   isBumpType,
   replacePackageVersion,
   runPublish,
-} from "../publish.ts";
-import { createMockRunner } from "../testing.ts";
+} from "@/publish.ts";
 
 describe("isBumpType", () => {
   test("accepts valid bump types", () => {

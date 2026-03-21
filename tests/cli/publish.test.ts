@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { adaptConfig } from "../../cli/commands/publish.ts";
-import type { ReleaseToolsConfig } from "../../cli/config.ts";
+import { adaptConfig } from "@/cli/commands/publish.ts";
+import type { ReleaseToolsConfig } from "@/cli/config.ts";
 
 describe("adaptConfig", () => {
   test("passes packageName through", () => {

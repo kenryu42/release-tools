@@ -1,7 +1,7 @@
-import type { RunChangelogOptions } from "../../changelog.ts";
-import { runChangelog } from "../../changelog.ts";
-import type { ReleaseToolsConfig } from "../config.ts";
-import { loadConfig } from "../config.ts";
+import type { RunChangelogOptions } from "@/changelog.ts";
+import { runChangelog } from "@/changelog.ts";
+import type { ReleaseToolsConfig } from "@/cli/config.ts";
+import { loadConfig } from "@/cli/config.ts";
 
 export function buildChangelogOptions(config: ReleaseToolsConfig): RunChangelogOptions {
   return {

@@ -1,13 +1,13 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { ReleaseToolsConfig } from "../config.ts";
+import type { ReleaseToolsConfig } from "@/cli/config.ts";
 import {
   generateCiWorkflow,
   generateConfigTemplate,
   generateLintWorkflow,
   generatePublishWorkflow,
-} from "../templates/workflows.ts";
+} from "@/cli/templates/workflows.ts";
 
 interface InitOptions {
   cwd: string;

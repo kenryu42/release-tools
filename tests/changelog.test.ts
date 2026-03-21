@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { createMockRunner } from "tests/testing";
 import {
   buildReleaseNotes,
   formatReleaseNotes,
@@ -7,8 +8,7 @@ import {
   getLatestReleasedTag,
   isIncludedCommit,
   runChangelog,
-} from "../changelog.ts";
-import { createMockRunner } from "../testing.ts";
+} from "@/changelog.ts";
 
 describe("isIncludedCommit", () => {
   test("matches feat and fix commits", () => {

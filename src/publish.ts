@@ -1,8 +1,8 @@
 import { $ } from "bun";
-import type { CommandRunner } from "./changelog.ts";
-import { buildReleaseNotes } from "./changelog.ts";
+import type { CommandRunner } from "@/changelog.ts";
+import { buildReleaseNotes } from "@/changelog.ts";
 
-export type BumpType = "major" | "minor" | "patch";
+type BumpType = "major" | "minor" | "patch";
 type FetchFn = (input: string | URL) => Promise<Response>;
 type Environment = Record<string, string | undefined>;
 
@@ -16,7 +16,7 @@ export type PublishConfig = {
   generateNotes?: (previousTag: string) => Promise<string[]>;
 };
 
-export type PublishOptions = {
+type PublishOptions = {
   config: PublishConfig;
   argv?: readonly string[];
   env?: Environment;

@@ -1,4 +1,4 @@
-import type { ReleaseToolsConfig } from "../config.ts";
+import type { ReleaseToolsConfig } from "@/cli/config.ts";
 
 export function generateConfigTemplate(
   config: Pick<ReleaseToolsConfig, "packageName" | "repo" | "homebrew">

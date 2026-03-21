@@ -1,6 +1,6 @@
-import { runUpdateHomebrew } from "../../homebrew.ts";
-import type { ReleaseToolsConfig } from "../config.ts";
-import { loadConfig } from "../config.ts";
+import type { ReleaseToolsConfig } from "@/cli/config.ts";
+import { loadConfig } from "@/cli/config.ts";
+import { runUpdateHomebrew } from "@/homebrew.ts";
 
 export function getVersion(
   argv: readonly string[],

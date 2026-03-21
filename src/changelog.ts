@@ -5,12 +5,6 @@ export type CommandRunner = (
   ...values: readonly string[]
 ) => { text: () => Promise<string> };
 
-export type ChangelogConfig = {
-  repo: string;
-  excludedAuthors?: string[];
-  commitPattern?: RegExp;
-};
-
 const DEFAULT_RUNNER: CommandRunner = $;
 const DEFAULT_EXCLUDED_AUTHORS = ["actions-user", "github-actions[bot]"];
 const DEFAULT_COMMIT_PATTERN = /^(feat|fix)(\([^)]+\))?:/i;
@@ -56,7 +50,7 @@ export function formatReleaseNotes(changelog: string[], contributors: string[]):
   return notes;
 }
 
-export type GenerateChangelogOptions = {
+type GenerateChangelogOptions = {
   runner?: CommandRunner;
   commitPattern?: RegExp;
 };
@@ -85,7 +79,7 @@ export async function generateChangelog(
     .map((commit) => `- ${commit}`);
 }
 
-export type GetContributorsOptions = {
+type GetContributorsOptions = {
   repo: string;
   excludedAuthors?: string[];
   commitPattern?: RegExp;
@@ -139,7 +133,7 @@ export async function getContributors(
   return notes;
 }
 
-export type BuildReleaseNotesOptions = {
+type BuildReleaseNotesOptions = {
   repo: string;
   excludedAuthors?: string[];
   commitPattern?: RegExp;

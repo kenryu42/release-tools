@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { getHomebrewConfig, getVersion } from "../../cli/commands/homebrew.ts";
-import type { ReleaseToolsConfig } from "../../cli/config.ts";
+import { getHomebrewConfig, getVersion } from "@/cli/commands/homebrew.ts";
+import type { ReleaseToolsConfig } from "@/cli/config.ts";
 
 describe("getVersion", () => {
   test("reads version from argv", () => {

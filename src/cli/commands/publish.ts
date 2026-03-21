@@ -1,8 +1,8 @@
-import { buildReleaseNotes } from "../../changelog.ts";
-import type { PublishConfig } from "../../publish.ts";
-import { runPublish } from "../../publish.ts";
-import type { ReleaseToolsConfig } from "../config.ts";
-import { loadConfig } from "../config.ts";
+import { buildReleaseNotes } from "@/changelog.ts";
+import type { ReleaseToolsConfig } from "@/cli/config.ts";
+import { loadConfig } from "@/cli/config.ts";
+import type { PublishConfig } from "@/publish.ts";
+import { runPublish } from "@/publish.ts";
 
 export function adaptConfig(config: ReleaseToolsConfig): PublishConfig {
   const buildCmd = config.build;

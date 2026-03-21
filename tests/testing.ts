@@ -1,6 +1,6 @@
-import type { CommandRunner } from "./changelog.ts";
+import type { CommandRunner } from "@/changelog.ts";
 
-export type RunnerResponse = string | Error;
+type RunnerResponse = string | Error;
 
 export function createMockRunner(responses: readonly [string, RunnerResponse][]): CommandRunner {
   return (strings: TemplateStringsArray, ...values: readonly string[]) => {

@@ -4,9 +4,12 @@ const command = process.argv[2];
 
 const commands: Record<string, () => Promise<void>> = {
   init: async () => {
-    console.error("Error: init requires --package-name and --repo flags or interactive input");
-    console.error("Usage: release-tools init --package-name <name> --repo <owner/repo>");
-    process.exit(1);
+    const { detectProjectInfo, run } = await import("./commands/init.ts");
+    const args = process.argv.slice(3);
+    const force = args.includes("--force");
+    const cwd = process.cwd();
+    const { packageName, repo } = await detectProjectInfo({ cwd });
+    await run({ cwd, packageName, repo, force });
   },
   publish: () => import("./commands/publish.ts").then((m) => m.run()),
   changelog: () => import("./commands/changelog.ts").then((m) => m.run()),

@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { readFile as fsReadFile, mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import type { ReleaseToolsConfig } from "@/cli/config.ts";
 import {
@@ -9,8 +9,41 @@ import {
   generatePublishWorkflow,
 } from "@/cli/templates/workflows.ts";
 
+export const RELEASE_TOOLS_DIR = ".release-tools";
+export const CACHE_FILE = ".release-tools/cache.json";
+
+export const MANAGED_SCRIPTS: Record<string, string> = {
+  typecheck: "tsc --noEmit",
+  knip: "knip-bun",
+  lint: "biome check --write .",
+  "lint:ci": "biome ci .",
+  check: "bun run typecheck && bun run knip && bun run lint && AGENT=1 bun test --coverage",
+  prepare: "husky",
+};
+
+export const MANAGED_LINT_STAGED: Record<string, string[]> = {
+  "*": ["biome check --write --no-errors-on-unmatched"],
+};
+
+export const MANAGED_TSCONFIG = {
+  baseUrl: ".",
+  paths: { "@/*": ["src/*"] },
+} as const;
+
+export const MANAGED_DEPS = ["husky", "lint-staged", "knip", "@biomejs/biome"] as const;
+
+export interface ProjectSetupCache {
+  scripts: Record<string, string | null>;
+  lintStaged: Record<string, string[]> | null;
+  tsconfig: {
+    baseUrl: string | null;
+    paths: Record<string, string[]> | null;
+  } | null;
+  installedDeps: string[];
+}
+
 export const MANAGED_FILES = [
-  "release-tools.config.ts",
+  ".release-tools/config.ts",
   ".github/workflows/publish.yml",
   ".github/workflows/ci.yml",
   ".github/workflows/lint-github-action-workflows.yml",
@@ -20,7 +53,7 @@ export function buildManagedFileContent(
   config: ReleaseToolsConfig
 ): Record<(typeof MANAGED_FILES)[number], string> {
   return {
-    "release-tools.config.ts": generateConfigTemplate(config),
+    ".release-tools/config.ts": generateConfigTemplate(config),
     ".github/workflows/publish.yml": generatePublishWorkflow(config),
     ".github/workflows/ci.yml": generateCiWorkflow(),
     ".github/workflows/lint-github-action-workflows.yml": generateLintWorkflow(),
@@ -34,6 +67,7 @@ interface InitOptions {
   force?: boolean;
   homebrew?: ReleaseToolsConfig["homebrew"];
   log?: (message: string) => void;
+  exec?: (command: string[]) => Promise<void>;
 }
 
 interface DetectDeps {
@@ -55,7 +89,7 @@ function parseRepo(remoteUrl: string): string {
 export async function detectProjectInfo(
   deps: DetectDeps
 ): Promise<{ packageName: string; repo: string }> {
-  const readFile = deps.readFile ?? ((path: string) => fsReadFile(path, "utf-8"));
+  const read = deps.readFile ?? ((path: string) => readFile(path, "utf-8"));
   const gitRemoteUrl =
     deps.gitRemoteUrl ??
     (async () => {
@@ -71,7 +105,7 @@ export async function detectProjectInfo(
 
   let packageJson: string;
   try {
-    packageJson = await readFile(join(deps.cwd, "package.json"));
+    packageJson = await read(join(deps.cwd, "package.json"));
   } catch {
     throw new Error("No package.json found in current directory.");
   }
@@ -93,8 +127,85 @@ export async function detectProjectInfo(
   return { packageName: parsed.name, repo };
 }
 
+async function defaultExec(cwd: string, command: string[]): Promise<void> {
+  const proc = Bun.spawn(command, { cwd, stdout: "inherit", stderr: "inherit" });
+  const exitCode = await proc.exited;
+  if (exitCode !== 0) throw new Error(`Command failed: ${command.join(" ")}`);
+}
+
+async function setupProject(options: {
+  cwd: string;
+  log: (message: string) => void;
+  exec: (command: string[]) => Promise<void>;
+}): Promise<void> {
+  const { cwd, log, exec } = options;
+  const cachePath = join(cwd, CACHE_FILE);
+  const pkgPath = join(cwd, "package.json");
+
+  const pkg = JSON.parse(await readFile(pkgPath, "utf-8"));
+
+  if (!existsSync(cachePath)) {
+    const cache: ProjectSetupCache = {
+      scripts: {},
+      lintStaged: pkg["lint-staged"] ?? null,
+      tsconfig: null,
+      installedDeps: [],
+    };
+
+    for (const key of Object.keys(MANAGED_SCRIPTS)) {
+      cache.scripts[key] = pkg.scripts?.[key] ?? null;
+    }
+
+    const tsconfigPath = join(cwd, "tsconfig.json");
+    if (existsSync(tsconfigPath)) {
+      const tsconfig = JSON.parse(await readFile(tsconfigPath, "utf-8"));
+      cache.tsconfig = {
+        baseUrl: tsconfig.compilerOptions?.baseUrl ?? null,
+        paths: tsconfig.compilerOptions?.paths ?? null,
+      };
+    }
+
+    const existingDevDeps = pkg.devDependencies ?? {};
+    cache.installedDeps = MANAGED_DEPS.filter((dep) => !(dep in existingDevDeps));
+
+    await writeFile(cachePath, `${JSON.stringify(cache, null, 2)}\n`);
+    log(`✓ Created ${CACHE_FILE}`);
+  } else {
+    log(`⏭️  Skipped ${CACHE_FILE} (already exists)`);
+  }
+
+  const cache: ProjectSetupCache = JSON.parse(await readFile(cachePath, "utf-8"));
+
+  pkg.scripts = { ...pkg.scripts, ...MANAGED_SCRIPTS };
+  pkg["lint-staged"] = MANAGED_LINT_STAGED;
+  await writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+  log("✓ Updated package.json (scripts, lint-staged)");
+
+  const tsconfigPath = join(cwd, "tsconfig.json");
+  if (existsSync(tsconfigPath)) {
+    const tsconfig = JSON.parse(await readFile(tsconfigPath, "utf-8"));
+    tsconfig.compilerOptions = {
+      ...tsconfig.compilerOptions,
+      baseUrl: MANAGED_TSCONFIG.baseUrl,
+      paths: MANAGED_TSCONFIG.paths,
+    };
+    await writeFile(tsconfigPath, `${JSON.stringify(tsconfig, null, 2)}\n`);
+    log("✓ Updated tsconfig.json (baseUrl, paths)");
+  } else {
+    log("⚠️  Skipped tsconfig.json (not found)");
+  }
+
+  if (cache.installedDeps.length > 0) {
+    await exec(["bun", "install", "-d", ...cache.installedDeps]);
+    log(`✓ Installed dev dependencies: ${cache.installedDeps.join(", ")}`);
+  } else {
+    log("⏭️  Skipped dependency installation (all present)");
+  }
+}
+
 export async function run(options: InitOptions): Promise<void> {
   const { cwd, packageName, repo, force = false, homebrew, log = console.log } = options;
+  const exec = options.exec ?? ((cmd: string[]) => defaultExec(cwd, cmd));
 
   const config: ReleaseToolsConfig = {
     packageName,
@@ -110,6 +221,7 @@ export async function run(options: InitOptions): Promise<void> {
     content: contentByPath[relativePath],
   }));
 
+  await mkdir(join(cwd, RELEASE_TOOLS_DIR), { recursive: true });
   await mkdir(join(cwd, ".github/workflows"), { recursive: true });
 
   for (const file of files) {
@@ -122,4 +234,6 @@ export async function run(options: InitOptions): Promise<void> {
     await writeFile(file.path, file.content);
     log(`✓ ${existed ? "Updated" : "Created"} ${file.name}`);
   }
+
+  await setupProject({ cwd, log, exec });
 }

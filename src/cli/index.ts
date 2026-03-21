@@ -11,15 +11,26 @@ const commands: Record<string, () => Promise<void>> = {
     const { packageName, repo } = await detectProjectInfo({ cwd });
     await run({ cwd, packageName, repo, force });
   },
+  deinit: () => import("./commands/deinit.ts").then((m) => m.run({ cwd: process.cwd() })),
   publish: () => import("./commands/publish.ts").then((m) => m.run()),
   changelog: () => import("./commands/changelog.ts").then((m) => m.run()),
   homebrew: () => import("./commands/homebrew.ts").then((m) => m.run()),
+  help: async () => {
+    printUsage();
+    process.exit(0);
+  },
 };
 
 async function main() {
-  if (!command || command.startsWith("-")) {
+  if (!command || command === "--help" || command === "-h") {
     printUsage();
-    process.exit(command ? 1 : 0);
+    process.exit(0);
+  }
+
+  if (command.startsWith("-")) {
+    console.error(`Unknown option: ${command}`);
+    printUsage();
+    process.exit(1);
   }
 
   const handler = commands[command];
@@ -41,12 +52,15 @@ Usage:
 
 Commands:
   init              Scaffold release-tools.config.ts and GitHub Actions workflows
+  deinit            Remove files created by init
   publish           Publish a new version to npm and create GitHub release
   changelog         Generate and print changelog
   homebrew          Update Homebrew tap formula
+  help              Show this help message
 
 Examples:
   release-tools init
+  release-tools deinit
   release-tools publish --dry-run
   release-tools changelog
   release-tools homebrew 1.2.3

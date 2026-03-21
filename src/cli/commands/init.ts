@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { readFile as fsReadFile, mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import type { ReleaseToolsConfig } from "@/cli/config.ts";
 import {
   generateCiWorkflow,
@@ -8,6 +8,24 @@ import {
   generateLintWorkflow,
   generatePublishWorkflow,
 } from "@/cli/templates/workflows.ts";
+
+export const MANAGED_FILES = [
+  "release-tools.config.ts",
+  ".github/workflows/publish.yml",
+  ".github/workflows/ci.yml",
+  ".github/workflows/lint-github-action-workflows.yml",
+] as const;
+
+export function buildManagedFileContent(
+  config: ReleaseToolsConfig
+): Record<(typeof MANAGED_FILES)[number], string> {
+  return {
+    "release-tools.config.ts": generateConfigTemplate(config),
+    ".github/workflows/publish.yml": generatePublishWorkflow(config),
+    ".github/workflows/ci.yml": generateCiWorkflow(),
+    ".github/workflows/lint-github-action-workflows.yml": generateLintWorkflow(),
+  };
+}
 
 interface InitOptions {
   cwd: string;
@@ -84,28 +102,13 @@ export async function run(options: InitOptions): Promise<void> {
     ...(homebrew && { homebrew }),
   };
 
-  const files = [
-    {
-      path: join(cwd, "release-tools.config.ts"),
-      name: "release-tools.config.ts",
-      content: generateConfigTemplate({ packageName, repo, homebrew }),
-    },
-    {
-      path: join(cwd, ".github/workflows/publish.yml"),
-      name: "publish.yml",
-      content: generatePublishWorkflow(config),
-    },
-    {
-      path: join(cwd, ".github/workflows/ci.yml"),
-      name: "ci.yml",
-      content: generateCiWorkflow(),
-    },
-    {
-      path: join(cwd, ".github/workflows/lint-github-action-workflows.yml"),
-      name: "lint-github-action-workflows.yml",
-      content: generateLintWorkflow(),
-    },
-  ];
+  const contentByPath = buildManagedFileContent(config);
+
+  const files = MANAGED_FILES.map((relativePath) => ({
+    path: join(cwd, relativePath),
+    name: basename(relativePath),
+    content: contentByPath[relativePath],
+  }));
 
   await mkdir(join(cwd, ".github/workflows"), { recursive: true });
 

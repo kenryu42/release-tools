@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { CommandRunner } from "@/changelog.ts";
 import { computeSha256, runUpdateHomebrew, updateFormula } from "@/homebrew.ts";
-import { createMockRunner } from "./testing.ts";
+import { createMockRunner } from "./mock-runner.ts";
 
 const SAMPLE_FORMULA = `class RalphReview < Formula
   desc "Orchestrating coding agents for code review, verification and fixing"

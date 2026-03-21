@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createMockRunner } from "tests/testing";
+import { createMockRunner } from "tests/mock-runner";
 import {
   bumpVersion,
   collectUnexpectedChanges,

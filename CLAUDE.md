@@ -47,7 +47,7 @@ Live workflow YAML files extracted from a consuming project (ralph-review). Thes
 
 ### Test structure
 
-Tests live in `tests/` mirroring the source layout (`tests/cli/` for CLI tests). All external commands are mocked via `createMockRunner` from `testing.ts` - tests never hit real git, npm, or GitHub APIs.
+Tests live in `tests/` mirroring the source layout (`tests/cli/` for CLI tests). All external commands are mocked via `createMockRunner` from `mock-runner.ts` - tests never hit real git, npm, or GitHub APIs.
 
 ## Key Design Patterns
 

@@ -17,13 +17,27 @@
     "knip": "knip-bun",
     "lint": "biome check --write .",
     "lint:ci": "biome ci .",
-    "check": "bun run typecheck && bun run knip && bun run lint && AGENT=1 bun test --coverage"
+    "check": "bun run typecheck && bun run knip && bun run lint && AGENT=1 bun test --coverage",
+    "release-tools": "bun run src/cli/index.ts",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.12",
+    "@biomejs/biome": "^2.4.8",
     "@types/bun": "latest",
-    "knip": "^5.82.1",
+    "husky": "^9.1.7",
+    "knip": "^6.0.1",
+    "lint-staged": "^16.4.0",
     "typescript": "^5"
+  },
+  "knip": {
+    "ignoreDependencies": [
+      "lint-staged"
+    ]
+  },
+  "lint-staged": {
+    "*": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
   },
   "private": true
 }

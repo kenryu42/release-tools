@@ -10,7 +10,7 @@ Tests must produce no console output on success. Inject a no-op `log` (or equiva
 
 ## What This Is
 
-Shared release automation CLI for 420024-lab projects. Provides three core modules (publish, changelog, homebrew) behind a single CLI (`release-tools`). Consuming projects add a `release-tools.config.ts` and get CI/publish workflows via `release-tools init`.
+Shared release automation CLI (repo: `kenryu42/release-tools`). Provides three core modules (publish, changelog, homebrew) behind a single CLI (`release-tools`). Consuming projects install via `bun add -d github:kenryu42/release-tools`, add a `.release-tools/config.ts`, and get CI/publish workflows via `release-tools init`.
 
 ## Commands
 
@@ -32,18 +32,23 @@ bun run check            # typecheck + knip + lint + test (full gate)
 - **`changelog.ts`** - Git log parsing, contributor fetching via `gh api`, release note formatting. All functions accept an optional `CommandRunner` for testability.
 - **`publish.ts`** - Full publish orchestration: version bump, preflight checks, npm publish, git tag/push, GitHub release creation. Supports `--dry-run` and `--recover` modes. Requires `CI=true` for real publishes.
 - **`homebrew.ts`** - Updates a Homebrew tap formula via GitHub API (fetches tarball SHA256, patches formula, pushes via `gh api`).
-- **`testing.ts`** - `createMockRunner` factory: builds a `CommandRunner` that pattern-matches shell command strings against canned responses. Used by all test files.
+- **`mock-runner.ts`** - `createMockRunner` factory: builds a `CommandRunner` that pattern-matches shell command strings against canned responses. Used by all test files.
 
 ### CLI layer (`cli/`)
 
 - **`cli/index.ts`** - Entry point (`bin` in package.json). Dispatches `init`, `publish`, `changelog`, `homebrew` subcommands.
-- **`cli/config.ts`** - `defineConfig()` / `loadConfig()` for `release-tools.config.ts` files in consuming projects.
+- **`cli/config.ts`** - `defineConfig()` / `loadConfig()` for `.release-tools/config.ts` files in consuming projects.
 - **`cli/commands/`** - Each command adapter loads config, converts `ReleaseToolsConfig` into the module-specific options type, then calls the library function.
 - **`cli/templates/workflows.ts`** - Generates GitHub Actions YAML (publish, CI, actionlint) as template strings. Uses a `gh()` helper to emit `${{ }}` expressions.
 
 ### Reference workflows (`workflows/`)
 
 Live workflow YAML files extracted from a consuming project (ralph-review). These serve as the source-of-truth that the template generators should reproduce.
+
+### Init / deinit (`cli/commands/`)
+
+- **`init.ts`** - Scaffolds config, workflows, package.json scripts, lint-staged, tsconfig paths, and dev dependencies. Caches original state in `.release-tools/cache.json` for deinit to restore.
+- **`deinit.ts`** - Removes all managed files and restores original project state from cache. Prompts on modified files.
 
 ### Test structure
 
@@ -52,7 +57,7 @@ Tests live in `tests/` mirroring the source layout (`tests/cli/` for CLI tests).
 ## Key Design Patterns
 
 - **`CommandRunner` injection**: The `$` tagged template from Bun is the default shell runner. Every function that shells out accepts an optional `CommandRunner`, allowing tests to substitute `createMockRunner`. The runner uses tagged template literal syntax: `` runner`git log ...`.text() ``.
-- **Config-driven CLI**: The CLI reads `release-tools.config.ts` (via dynamic `import()`) and adapts it to each module's options type. The `defineConfig()` export provides type safety for consuming projects.
+- **Config-driven CLI**: The CLI reads `.release-tools/config.ts` (via dynamic `import()`) and adapts it to each module's options type. The `defineConfig()` export provides type safety for consuming projects.
 
 ## Formatting
 

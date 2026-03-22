@@ -1,33 +1,44 @@
 # release-tools
 
-Shared release automation toolkit. Provides publish orchestration, changelog generation, and Homebrew tap updates as a CLI.
+Shared release automation CLI. Provides publish orchestration, changelog generation, and Homebrew tap updates. Consuming projects install it as a git dependency and run `release-tools init` to scaffold config and CI workflows.
 
-## Setup
+## Installation
+
+Install as a git dependency in your project:
 
 ```bash
-bun install
+bun add -d github:kenryu42/release-tools
 ```
 
-### Bootstrapping a consuming project
+## Quick start
 
-Run `init` in the target project to scaffold a config file and GitHub Actions workflows:
+Run `init` in your project to scaffold config, workflows, and dev tooling:
 
 ```bash
 bunx release-tools init
 ```
 
-The command auto-detects the package name from `package.json` and the repo from the git remote origin. Use `--force` to overwrite existing files.
+This auto-detects the package name from `package.json` and the repo from the git remote origin. Use `--force` to overwrite existing files.
 
-This creates:
+### What init creates
 
-- `release-tools.config.ts` -- project-specific settings
+- `.release-tools/config.ts` -- project-specific settings
 - `.github/workflows/publish.yml` -- manual-trigger publish pipeline
 - `.github/workflows/ci.yml` -- PR/push quality gate
 - `.github/workflows/lint-github-action-workflows.yml` -- actionlint validation
 
+### What init manages
+
+Init also configures your project's dev tooling, storing original state in `.release-tools/cache.json` so `deinit` can restore it:
+
+- **package.json scripts** -- adds `typecheck`, `knip`, `lint`, `lint:ci`, `check`, `prepare`
+- **lint-staged config** -- adds Biome check for all files
+- **tsconfig.json** -- adds `baseUrl` and `@/*` path alias (if tsconfig exists)
+- **Dev dependencies** -- installs `husky`, `lint-staged`, `knip`, `@biomejs/biome`
+
 ## Configuration
 
-Define your project config in `release-tools.config.ts`:
+Define your project config in `.release-tools/config.ts`:
 
 ```ts
 import { defineConfig } from "release-tools/config";
@@ -38,7 +49,7 @@ export default defineConfig({
   releaseFiles: ["package.json"],       // files allowed to change during publish
   build: "bun run build",               // build command (optional)
   excludedAuthors: ["github-actions"],   // bots to exclude from changelog
-  publishCommand: ["npm", "publish"],    // custom publish command (optional)
+  publishCommand: ["npm", "publish", "--access", "public", "--provenance"], // custom publish command (optional)
   homebrew: {                            // omit if no Homebrew tap
     tapRepo: "owner/homebrew-tap",
     formulaPath: "Formula/my-package.rb",
@@ -55,10 +66,28 @@ release-tools <command>
 
 | Command     | Description |
 |-------------|-------------|
-| `init`      | Scaffold config and CI workflows (auto-detects package name and repo) |
+| `init`      | Scaffold config, workflows, and dev tooling (auto-detects package name and repo) |
+| `deinit`    | Remove all files and config created by init, restoring original state |
 | `publish`   | Version bump, build, npm publish, git tag, GitHub release |
 | `changelog` | Print release notes since the last published tag |
 | `homebrew`  | Update a Homebrew tap formula with a new version and SHA256 |
+
+### init
+
+Scaffolds a consuming project with config, CI workflows, and dev tooling. See [Quick start](#quick-start) above.
+
+```bash
+release-tools init          # scaffold (skips existing files)
+release-tools init --force  # overwrite existing files
+```
+
+### deinit
+
+Removes all files created by `init` and restores original `package.json`, `tsconfig.json`, and dependency state from the cache. Prompts for confirmation if any managed files were modified.
+
+```bash
+release-tools deinit
+```
 
 ### publish
 
@@ -67,7 +96,8 @@ Runs the full publish pipeline: preflight checks, version bump, build, npm publi
 ```bash
 BUMP=patch release-tools publish           # bump patch version
 BUMP=minor release-tools publish --dry-run # preview without side effects
-release-tools publish --recover            # retry a failed publish from where it left off
+release-tools publish --recover            # check for partial publish state
+release-tools publish --recover --execute  # retry from where it left off
 ```
 
 Requires `CI=true` for real publishes. Accepts `BUMP` (major/minor/patch) and optional `VERSION` environment variables.
@@ -90,11 +120,12 @@ Updates a Homebrew tap formula with the new version's tarball URL and SHA256.
 release-tools homebrew 1.2.3
 ```
 
-Requires `homebrew` to be configured in `release-tools.config.ts`.
+Requires `homebrew` to be configured in `.release-tools/config.ts`.
 
 ## Development
 
 ```bash
+bun install                      # install deps
 bun test                         # run all tests
 bun test tests/publish.test.ts   # run a single test file
 bun run typecheck                # tsc --noEmit

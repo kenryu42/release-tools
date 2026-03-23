@@ -28,6 +28,7 @@ describe("getHomebrewConfig", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-tool",
       repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
       homebrew: homebrewObj,
     };
     const homebrewConfig = getHomebrewConfig(config);
@@ -38,6 +39,7 @@ describe("getHomebrewConfig", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-tool",
       repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
     };
     expect(() => getHomebrewConfig(config)).toThrow("Homebrew not configured");
   });

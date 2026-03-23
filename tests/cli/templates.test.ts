@@ -12,6 +12,7 @@ describe("generateConfigTemplate", () => {
     const template = generateConfigTemplate({
       packageName: "my-tool",
       repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
     });
     expect(template).toContain('import { defineConfig } from "release-tools/config"');
     expect(template).toContain("export default defineConfig");
@@ -21,15 +22,35 @@ describe("generateConfigTemplate", () => {
     const template = generateConfigTemplate({
       packageName: "test-pkg",
       repo: "owner/test-pkg",
+      excludedAuthors: ["owner"],
     });
     expect(template).toContain("packageName: 'test-pkg'");
     expect(template).toContain("repo: 'owner/test-pkg'");
+  });
+
+  test("includes excludedAuthors in config", () => {
+    const template = generateConfigTemplate({
+      packageName: "my-tool",
+      repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
+    });
+    expect(template).toContain("excludedAuthors: ['owner']");
+  });
+
+  test("includes multiple excludedAuthors", () => {
+    const template = generateConfigTemplate({
+      packageName: "my-tool",
+      repo: "owner/my-tool",
+      excludedAuthors: ["owner", "bot-user"],
+    });
+    expect(template).toContain("excludedAuthors: ['owner', 'bot-user']");
   });
 
   test("includes homebrew block when provided", () => {
     const template = generateConfigTemplate({
       packageName: "my-tool",
       repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
       homebrew: {
         tapRepo: "owner/homebrew-tap",
         formulaPath: "Formula/my-tool.rb",
@@ -44,6 +65,7 @@ describe("generateConfigTemplate", () => {
     const template = generateConfigTemplate({
       packageName: "my-tool",
       repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
     });
     expect(template).not.toContain("homebrew:");
   });
@@ -54,6 +76,7 @@ describe("generatePublishWorkflow", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-tool",
       repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
     };
     const workflow = generatePublishWorkflow(config);
     expect(workflow).toContain("if: github.repository == 'owner/my-tool'");
@@ -63,6 +86,7 @@ describe("generatePublishWorkflow", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-tool",
       repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
     };
     const workflow = generatePublishWorkflow(config);
     expect(workflow).toContain("bunx release-tools publish");
@@ -72,6 +96,7 @@ describe("generatePublishWorkflow", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-tool",
       repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
       homebrew: {
         tapRepo: "owner/homebrew-tap",
         formulaPath: "Formula/my-tool.rb",
@@ -87,6 +112,7 @@ describe("generatePublishWorkflow", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-tool",
       repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
     };
     const workflow = generatePublishWorkflow(config);
     expect(workflow).not.toContain("Update Homebrew tap");

@@ -14,7 +14,7 @@ import {
 
 const noop = () => {};
 const noopExec = async () => {};
-const PKG = { packageName: "test-pkg", repo: "owner/test-pkg" };
+const PKG = { packageName: "test-pkg", repo: "owner/test-pkg", excludedAuthors: ["owner"] };
 const fakeLoadConfig = async () => PKG;
 
 async function scaffold(projectDir: string) {

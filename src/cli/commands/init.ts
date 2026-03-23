@@ -66,6 +66,7 @@ interface InitOptions {
   cwd: string;
   packageName: string;
   repo: string;
+  excludedAuthors: string[];
   force?: boolean;
   homebrew?: ReleaseToolsConfig["homebrew"];
   log?: (message: string) => void;
@@ -206,12 +207,21 @@ async function setupProject(options: {
 }
 
 export async function run(options: InitOptions): Promise<void> {
-  const { cwd, packageName, repo, force = false, homebrew, log = console.log } = options;
+  const {
+    cwd,
+    packageName,
+    repo,
+    excludedAuthors,
+    force = false,
+    homebrew,
+    log = console.log,
+  } = options;
   const exec = options.exec ?? ((cmd: string[]) => defaultExec(cwd, cmd));
 
   const config: ReleaseToolsConfig = {
     packageName,
     repo,
+    excludedAuthors,
     ...(homebrew && { homebrew }),
   };
 

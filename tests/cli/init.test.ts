@@ -36,6 +36,7 @@ describe("init command", () => {
       cwd: projectDir,
       packageName: "test-pkg",
       repo: "owner/test-pkg",
+      excludedAuthors: ["owner"],
       force: false,
       log: noop,
       exec: noopExec,
@@ -53,6 +54,7 @@ describe("init command", () => {
       cwd: projectDir,
       packageName: "test-pkg",
       repo: "owner/test-pkg",
+      excludedAuthors: ["owner"],
       force: false,
       log: noop,
       exec: noopExec,
@@ -77,6 +79,7 @@ describe("init command", () => {
       cwd: projectDir,
       packageName: "test-pkg",
       repo: "owner/test-pkg",
+      excludedAuthors: ["owner"],
       force: false,
       log: noop,
       exec: noopExec,
@@ -96,6 +99,7 @@ describe("init command", () => {
       cwd: projectDir,
       packageName: "test-pkg",
       repo: "owner/test-pkg",
+      excludedAuthors: ["owner"],
       force: true,
       log: noop,
       exec: noopExec,
@@ -116,6 +120,7 @@ describe("init command", () => {
       cwd: projectDir,
       packageName: "test-pkg",
       repo: "owner/test-pkg",
+      excludedAuthors: ["owner"],
       force: false,
       log: noop,
       exec: noopExec,
@@ -133,6 +138,7 @@ describe("init command", () => {
       cwd: projectDir,
       packageName: "test-pkg",
       repo: "owner/test-pkg",
+      excludedAuthors: ["owner"],
       force: false,
       homebrew: {
         tapRepo: "owner/homebrew-tap",
@@ -146,12 +152,31 @@ describe("init command", () => {
     const config = readFileSync(join(projectDir, ".release-tools/config.ts"), "utf-8");
     expect(config).toContain("homebrew:");
   });
+
+  test("includes excludedAuthors in generated config", async () => {
+    const projectDir = join(tempDir, "project7");
+    await mkdir(projectDir);
+    await writeFile(join(projectDir, "package.json"), JSON.stringify({ name: "test-pkg" }));
+
+    await run({
+      cwd: projectDir,
+      packageName: "test-pkg",
+      repo: "owner/test-pkg",
+      excludedAuthors: ["owner"],
+      force: false,
+      log: noop,
+      exec: noopExec,
+    });
+
+    const config = readFileSync(join(projectDir, ".release-tools/config.ts"), "utf-8");
+    expect(config).toContain("excludedAuthors: ['owner']");
+  });
 });
 
 describe("init project setup", () => {
   let tempDir: string;
 
-  const PKG = { packageName: "test-pkg", repo: "owner/test-pkg" };
+  const PKG = { packageName: "test-pkg", repo: "owner/test-pkg", excludedAuthors: ["owner"] };
   const initOpts = (cwd: string, extra: Record<string, unknown> = {}) => ({
     cwd,
     ...PKG,

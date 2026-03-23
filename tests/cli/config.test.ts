@@ -9,6 +9,7 @@ describe("defineConfig", () => {
     const config = {
       packageName: "my-tool",
       repo: "owner/my-tool",
+      excludedAuthors: ["owner"],
     };
     expect(defineConfig(config)).toEqual(config);
   });
@@ -56,7 +57,7 @@ describe("loadConfig", () => {
     await mkdir(join(tempDir, ".release-tools"), { recursive: true });
     await writeFile(join(tempDir, ".release-tools/config.ts"), configContent);
     const config = await loadConfig(tempDir);
-    expect(config).toEqual({
+    expect(config).toMatchObject({
       packageName: "test-pkg",
       repo: "owner/test-pkg",
     });

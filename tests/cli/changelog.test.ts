@@ -14,13 +14,14 @@ describe("buildChangelogOptions", () => {
     expect(options.excludedAuthors).toEqual(["bot"]);
   });
 
-  test("works without excludedAuthors", () => {
+  test("passes empty excludedAuthors from config", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-pkg",
       repo: "owner/repo",
+      excludedAuthors: [],
     };
     const options = buildChangelogOptions(config);
     expect(options.repo).toBe("owner/repo");
-    expect(options.excludedAuthors).toBeUndefined();
+    expect(options.excludedAuthors).toEqual([]);
   });
 });

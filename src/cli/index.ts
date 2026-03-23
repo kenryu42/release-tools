@@ -9,7 +9,8 @@ const commands: Record<string, () => Promise<void>> = {
     const force = args.includes("--force");
     const cwd = process.cwd();
     const { packageName, repo } = await detectProjectInfo({ cwd });
-    await run({ cwd, packageName, repo, force });
+    const owner = repo.split("/")[0] as string;
+    await run({ cwd, packageName, repo, excludedAuthors: [owner], force });
   },
   deinit: () => import("./commands/deinit.ts").then((m) => m.run({ cwd: process.cwd() })),
   publish: () => import("./commands/publish.ts").then((m) => m.run()),

@@ -7,6 +7,7 @@ describe("adaptConfig", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-pkg",
       repo: "owner/repo",
+      excludedAuthors: ["owner"],
     };
     const adapted = adaptConfig(config);
     expect(adapted.packageName).toBe("my-pkg");
@@ -16,6 +17,7 @@ describe("adaptConfig", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-pkg",
       repo: "owner/repo",
+      excludedAuthors: ["owner"],
     };
     const adapted = adaptConfig(config);
     expect(adapted.releaseFiles).toEqual(["package.json"]);
@@ -25,6 +27,7 @@ describe("adaptConfig", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-pkg",
       repo: "owner/repo",
+      excludedAuthors: ["owner"],
       releaseFiles: ["package.json", "schema.json"],
     };
     const adapted = adaptConfig(config);
@@ -35,6 +38,7 @@ describe("adaptConfig", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-pkg",
       repo: "owner/repo",
+      excludedAuthors: ["owner"],
       publishCommand: ["bun", "publish"],
     };
     const adapted = adaptConfig(config);
@@ -45,6 +49,7 @@ describe("adaptConfig", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-pkg",
       repo: "owner/my-repo",
+      excludedAuthors: ["owner"],
     };
     const adapted = adaptConfig(config);
     expect(adapted.generateNotes).toBeDefined();

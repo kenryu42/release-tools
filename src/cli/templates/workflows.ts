@@ -1,8 +1,10 @@
 import type { ReleaseToolsConfig } from "@/cli/config.ts";
 
 export function generateConfigTemplate(
-  config: Pick<ReleaseToolsConfig, "packageName" | "repo" | "homebrew">
+  config: Pick<ReleaseToolsConfig, "packageName" | "repo" | "excludedAuthors" | "homebrew">
 ): string {
+  const excludedAuthorsBlock = `\n  excludedAuthors: [${config.excludedAuthors.map((a) => `'${a}'`).join(", ")}],`;
+
   const homebrewBlock = config.homebrew
     ? `
   homebrew: {
@@ -16,7 +18,7 @@ export function generateConfigTemplate(
 
 export default defineConfig({
   packageName: '${config.packageName}',
-  repo: '${config.repo}',${homebrewBlock}
+  repo: '${config.repo}',${excludedAuthorsBlock}${homebrewBlock}
 });
 `;
 }

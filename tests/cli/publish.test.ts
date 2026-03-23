@@ -41,17 +41,6 @@ describe("adaptConfig", () => {
     expect(adapted.publishCommand).toEqual(["bun", "publish"]);
   });
 
-  test("converts build string to async function", async () => {
-    const config: ReleaseToolsConfig = {
-      packageName: "my-pkg",
-      repo: "owner/repo",
-      build: "echo test",
-    };
-    const adapted = adaptConfig(config);
-    expect(adapted.build).toBeDefined();
-    await adapted.build?.();
-  });
-
   test("always provides generateNotes using config.repo", () => {
     const config: ReleaseToolsConfig = {
       packageName: "my-pkg",

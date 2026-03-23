@@ -5,7 +5,6 @@ export type ReleaseToolsConfig = {
   packageName: string;
   repo: string;
   releaseFiles?: string[];
-  build?: string;
   excludedAuthors?: string[];
   publishCommand?: string[];
   homebrew?: {

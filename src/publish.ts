@@ -10,7 +10,6 @@ export type PublishConfig = {
   packageName: string;
   releaseFiles: readonly string[];
   publishCommand?: readonly string[];
-  build?: () => Promise<void>;
   updateVersionFiles?: (version: string) => Promise<void>;
   revertChanges?: () => Promise<void>;
   generateNotes?: (previousTag: string) => Promise<string[]>;
@@ -243,11 +242,6 @@ async function runDryRun(
       await updatePackageVersion(newVersion, log);
     }
 
-    if (config.build) {
-      log("\nBuilding...");
-      await config.build();
-    }
-
     const fileArgs = config.releaseFiles.join(" ");
     await runner`git add ${fileArgs}`.text();
     const staged = await runner`git diff --cached --stat`.text();
@@ -420,11 +414,6 @@ export async function runPublish(options: PublishOptions): Promise<void> {
       repo: config.packageName,
       runner,
     });
-  }
-
-  if (config.build) {
-    log("\nBuilding...");
-    await config.build();
   }
 
   await gitCommitTagPush(newVersion, config.releaseFiles, runner, log);

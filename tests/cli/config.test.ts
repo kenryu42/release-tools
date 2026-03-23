@@ -18,7 +18,6 @@ describe("defineConfig", () => {
       packageName: "my-tool",
       repo: "owner/my-tool",
       releaseFiles: ["package.json", "schema.json"],
-      build: "bun run build",
       excludedAuthors: ["bot"],
       publishCommand: ["npm", "publish"],
       homebrew: {

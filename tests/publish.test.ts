@@ -289,44 +289,6 @@ describe("runPublish", () => {
     expect(logs.some((l) => l.includes("2.0.0"))).toBe(true);
   });
 
-  test("calls build hook when provided", async () => {
-    let buildCalled = false;
-    const runner = createMockRunner([
-      ["git status --porcelain", ""],
-      ["git rev-parse v1.0.0", "abc123"],
-      ["git rev-parse v1.0.1", new Error("not found")],
-      ["git add", ""],
-      ["git diff --cached --stat", " package.json | 2 +-\n"],
-      ['git log v1.0.0..HEAD --oneline --format="%h %s"', ""],
-      ['gh api "/repos/', ""],
-      ["git reset HEAD", ""],
-      ["git checkout --", ""],
-    ]);
-
-    const fetchFn = makeFetch({
-      "/latest": { ok: true, status: 200, data: { version: "1.0.0" } },
-    });
-
-    await runPublish({
-      config: {
-        packageName: "test-pkg",
-        releaseFiles: ["package.json"],
-        build: async () => {
-          buildCalled = true;
-        },
-        updateVersionFiles: async () => {},
-        revertChanges: async () => {},
-      },
-      argv: ["--dry-run"],
-      env: {},
-      fetchFn,
-      runner,
-      log: () => {},
-    });
-
-    expect(buildCalled).toBe(true);
-  });
-
   test("calls generateNotes hook when provided", async () => {
     const runner = createMockRunner([
       ["git status --porcelain", ""],

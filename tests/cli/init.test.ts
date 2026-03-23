@@ -11,6 +11,7 @@ import {
   MANAGED_TSCONFIG,
   type ProjectSetupCache,
   run,
+  stripJsonComments,
 } from "@/cli/commands/init.ts";
 
 const noop = () => {};
@@ -291,6 +292,53 @@ describe("init project setup", () => {
     expect(tsconfig.compilerOptions.target).toBe("ESNext");
   });
 
+  test("handles tsconfig.json with comments (JSONC from bun init)", async () => {
+    const dir = join(tempDir, "tsconfig-jsonc");
+    await mkdir(dir);
+    await writeFile(join(dir, "package.json"), JSON.stringify({ name: "test-pkg" }, null, 2));
+    const tsconfigWithComments = [
+      "{",
+      '  "compilerOptions": {',
+      "    // Environment setup & latest features",
+      '    "strict": true,',
+      '    "target": "ESNext",',
+      "    /* Bundler mode */",
+      '    "moduleResolution": "bundler"',
+      "  }",
+      "}",
+    ].join("\n");
+    await writeFile(join(dir, "tsconfig.json"), tsconfigWithComments);
+
+    await run(initOpts(dir));
+
+    const tsconfig = JSON.parse(readFileSync(join(dir, "tsconfig.json"), "utf-8"));
+    expect(tsconfig.compilerOptions.baseUrl).toBe(MANAGED_TSCONFIG.baseUrl);
+    expect(tsconfig.compilerOptions.paths).toEqual(MANAGED_TSCONFIG.paths);
+    expect(tsconfig.compilerOptions.strict).toBe(true);
+    expect(tsconfig.compilerOptions.target).toBe("ESNext");
+    expect(tsconfig.compilerOptions.moduleResolution).toBe("bundler");
+  });
+
+  test("caches raw tsconfig with comments for byte-perfect deinit restore", async () => {
+    const dir = join(tempDir, "tsconfig-jsonc-cache");
+    await mkdir(dir);
+    await writeFile(join(dir, "package.json"), JSON.stringify({ name: "test-pkg" }, null, 2));
+    const tsconfigWithComments = [
+      "{",
+      '  "compilerOptions": {',
+      "    // Best practices",
+      '    "strict": true',
+      "  }",
+      "}",
+    ].join("\n");
+    await writeFile(join(dir, "tsconfig.json"), tsconfigWithComments);
+
+    await run(initOpts(dir));
+
+    const cache: ProjectSetupCache = JSON.parse(readFileSync(join(dir, CACHE_FILE), "utf-8"));
+    expect(cache.tsconfig).toBe(tsconfigWithComments);
+  });
+
   test("skips tsconfig modifications when tsconfig.json is missing", async () => {
     const dir = join(tempDir, "tsconfig-missing");
     await mkdir(dir);
@@ -432,5 +480,58 @@ describe("init project setup", () => {
     for (const dep of MANAGED_DEPS) {
       expect(cmd).toContain(dep);
     }
+  });
+});
+
+describe("stripJsonComments", () => {
+  test("returns plain JSON unchanged", () => {
+    const json = '{"key": "value"}';
+    expect(stripJsonComments(json)).toBe(json);
+  });
+
+  test("strips single-line comments", () => {
+    const input = '{\n  // comment\n  "key": "value"\n}';
+    expect(JSON.parse(stripJsonComments(input))).toEqual({ key: "value" });
+  });
+
+  test("strips block comments", () => {
+    const input = '{\n  /* block comment */\n  "key": "value"\n}';
+    expect(JSON.parse(stripJsonComments(input))).toEqual({ key: "value" });
+  });
+
+  test("preserves // inside string values", () => {
+    const input = '{"url": "https://example.com"}';
+    expect(JSON.parse(stripJsonComments(input))).toEqual({ url: "https://example.com" });
+  });
+
+  test("preserves /* inside string values", () => {
+    const input = '{"pattern": "/* glob */"}';
+    expect(JSON.parse(stripJsonComments(input))).toEqual({ pattern: "/* glob */" });
+  });
+
+  test("handles escaped quotes in strings", () => {
+    const input = '{"msg": "say \\"hello\\"" // comment\n}';
+    expect(JSON.parse(stripJsonComments(input))).toEqual({ msg: 'say "hello"' });
+  });
+
+  test("parses bun init tsconfig style", () => {
+    const input = [
+      "{",
+      '  "compilerOptions": {',
+      "    // Environment setup",
+      '    "lib": ["ESNext"],',
+      '    "target": "ESNext",',
+      "",
+      "    /* Bundler mode */",
+      '    "moduleResolution": "bundler",',
+      '    "noEmit": true',
+      "  }",
+      "}",
+    ].join("\n");
+    const result = JSON.parse(stripJsonComments(input));
+    expect(result.compilerOptions.lib).toEqual(["ESNext"]);
+    expect(result.compilerOptions.target).toBe("ESNext");
+    expect(result.compilerOptions.moduleResolution).toBe("bundler");
+    expect(result.compilerOptions.noEmit).toBe(true);
   });
 });

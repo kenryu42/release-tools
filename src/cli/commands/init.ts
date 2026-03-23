@@ -59,6 +59,45 @@ export function buildManagedFileContent(
   };
 }
 
+export function stripJsonComments(json: string): string {
+  let result = "";
+  let i = 0;
+  let inString = false;
+
+  while (i < json.length) {
+    const ch = json[i] as string;
+    const next = json[i + 1];
+
+    if (inString) {
+      if (ch === "\\" && next !== undefined) {
+        result += ch + next;
+        i += 2;
+        continue;
+      }
+      if (ch === '"') {
+        inString = false;
+      }
+      result += ch;
+      i++;
+    } else if (ch === '"') {
+      inString = true;
+      result += ch;
+      i++;
+    } else if (ch === "/" && next === "/") {
+      while (i < json.length && json[i] !== "\n") i++;
+    } else if (ch === "/" && next === "*") {
+      i += 2;
+      while (i + 1 < json.length && !(json[i] === "*" && json[i + 1] === "/")) i++;
+      i += 2;
+    } else {
+      result += ch;
+      i++;
+    }
+  }
+
+  return result;
+}
+
 interface InitOptions {
   cwd: string;
   packageName: string;
@@ -179,7 +218,7 @@ async function setupProject(options: {
 
   const tsconfigPath = join(cwd, "tsconfig.json");
   if (existsSync(tsconfigPath)) {
-    const tsconfig = JSON.parse(await readFile(tsconfigPath, "utf-8"));
+    const tsconfig = JSON.parse(stripJsonComments(await readFile(tsconfigPath, "utf-8")));
     tsconfig.compilerOptions = {
       ...tsconfig.compilerOptions,
       baseUrl: MANAGED_TSCONFIG.baseUrl,

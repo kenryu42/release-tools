@@ -18,6 +18,8 @@ export const MANAGED_SCRIPTS: Record<string, string> = {
   lint: "biome check --write .",
   "lint:ci": "biome ci .",
   check: "bun run typecheck && bun run knip && bun run lint && AGENT=1 bun test --coverage",
+  "check:ci":
+    "bun run typecheck && bun run knip && bun run lint:ci && AGENT=1 bun test --coverage --coverage-reporter=lcov",
   prepare: "husky",
 };
 

@@ -167,10 +167,11 @@ describe("getContributors", () => {
     ]);
   });
 
-  test("uses custom excluded authors", async () => {
+  test("appends custom excluded authors to defaults", async () => {
     const compareOutput = [
       JSON.stringify({ login: "alice", message: "feat: add thing\n\nbody" }),
-      JSON.stringify({ login: "bot-user", message: "fix: automated fix\n\nbody" }),
+      JSON.stringify({ login: "actions-user", message: "fix: bot commit\n\nbody" }),
+      JSON.stringify({ login: "custom-bot", message: "fix: automated fix\n\nbody" }),
     ].join("\n");
     const runner = createMockRunner([
       ['gh api "/repos/example/repo/compare/v1.0.0...HEAD" --jq', compareOutput],
@@ -178,7 +179,31 @@ describe("getContributors", () => {
 
     const contributors = await getContributors("v1.0.0", {
       repo: "example/repo",
-      excludedAuthors: ["bot-user"],
+      excludedAuthors: ["custom-bot"],
+      runner,
+    });
+
+    expect(contributors).toEqual([
+      "",
+      "**Thank you to 1 community contributor:**",
+      "- @alice:",
+      "  - feat: add thing",
+    ]);
+  });
+
+  test("always excludes default authors even with empty custom list", async () => {
+    const compareOutput = [
+      JSON.stringify({ login: "alice", message: "feat: add thing\n\nbody" }),
+      JSON.stringify({ login: "actions-user", message: "fix: bot commit\n\nbody" }),
+      JSON.stringify({ login: "github-actions[bot]", message: "fix: bot fix\n\nbody" }),
+    ].join("\n");
+    const runner = createMockRunner([
+      ['gh api "/repos/example/repo/compare/v1.0.0...HEAD" --jq', compareOutput],
+    ]);
+
+    const contributors = await getContributors("v1.0.0", {
+      repo: "example/repo",
+      excludedAuthors: [],
       runner,
     });
 

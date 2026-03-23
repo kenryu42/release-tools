@@ -91,7 +91,7 @@ export async function getContributors(
   options: GetContributorsOptions
 ): Promise<string[]> {
   const runner = options.runner ?? DEFAULT_RUNNER;
-  const excludedAuthors = options.excludedAuthors ?? DEFAULT_EXCLUDED_AUTHORS;
+  const excludedAuthors = [...DEFAULT_EXCLUDED_AUTHORS, ...(options.excludedAuthors ?? [])];
   const pattern = options.commitPattern ?? DEFAULT_COMMIT_PATTERN;
   const notes: string[] = [];
 

@@ -86,23 +86,7 @@ async function teardownProject(options: {
   if (cache.tsconfig !== null) {
     const tsconfigPath = join(cwd, "tsconfig.json");
     if (existsSync(tsconfigPath)) {
-      const tsconfig = JSON.parse(await readFile(tsconfigPath, "utf-8"));
-
-      if (cache.tsconfig.baseUrl === null) {
-        delete tsconfig.compilerOptions?.baseUrl;
-      } else {
-        tsconfig.compilerOptions ??= {};
-        tsconfig.compilerOptions.baseUrl = cache.tsconfig.baseUrl;
-      }
-
-      if (cache.tsconfig.paths === null) {
-        delete tsconfig.compilerOptions?.paths;
-      } else {
-        tsconfig.compilerOptions ??= {};
-        tsconfig.compilerOptions.paths = cache.tsconfig.paths;
-      }
-
-      await writeFile(tsconfigPath, `${JSON.stringify(tsconfig, null, 2)}\n`);
+      await writeFile(tsconfigPath, cache.tsconfig);
       log("✓ Restored tsconfig.json");
     } else {
       log("⚠️  Skipped tsconfig.json restoration (file not found)");

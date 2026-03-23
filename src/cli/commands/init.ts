@@ -37,10 +37,7 @@ export const MANAGED_DEPS = ["husky", "lint-staged", "knip", "@biomejs/biome"] a
 export interface ProjectSetupCache {
   scripts: Record<string, string | null>;
   lintStaged: Record<string, string[]> | null;
-  tsconfig: {
-    baseUrl: string | null;
-    paths: Record<string, string[]> | null;
-  } | null;
+  tsconfig: string | null;
   installedDeps: string[];
 }
 
@@ -161,11 +158,7 @@ async function setupProject(options: {
 
     const tsconfigPath = join(cwd, "tsconfig.json");
     if (existsSync(tsconfigPath)) {
-      const tsconfig = JSON.parse(await readFile(tsconfigPath, "utf-8"));
-      cache.tsconfig = {
-        baseUrl: tsconfig.compilerOptions?.baseUrl ?? null,
-        paths: tsconfig.compilerOptions?.paths ?? null,
-      };
+      cache.tsconfig = await readFile(tsconfigPath, "utf-8");
     }
 
     const existingDevDeps = pkg.devDependencies ?? {};

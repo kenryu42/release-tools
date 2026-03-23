@@ -321,9 +321,7 @@ describe("init project setup", () => {
     expect(cache.scripts).toBeDefined();
     expect(cache.scripts.lint).toBe("eslint .");
     expect(cache.lintStaged).toBeNull();
-    expect(cache.tsconfig).toBeDefined();
-    expect(cache.tsconfig?.baseUrl).toBeNull();
-    expect(cache.tsconfig?.paths).toBeNull();
+    expect(cache.tsconfig).toBe(JSON.stringify({ compilerOptions: { strict: true } }, null, 2));
     expect(Array.isArray(cache.installedDeps)).toBe(true);
   });
 

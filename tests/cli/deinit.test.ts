@@ -288,43 +288,49 @@ describe("deinit project teardown", () => {
     expect(pkg["lint-staged"]).toEqual(originalLintStaged);
   });
 
-  test("removes tsconfig baseUrl and paths when added by init", async () => {
+  test("restores tsconfig when baseUrl and paths were added by init", async () => {
     const dir = join(tempDir, "tsconfig-remove");
     await mkdir(dir);
     await writeFile(join(dir, "package.json"), JSON.stringify({ name: "test-pkg" }, null, 2));
-    await writeFile(
-      join(dir, "tsconfig.json"),
-      JSON.stringify({ compilerOptions: { strict: true } }, null, 2)
-    );
+    const originalContent = JSON.stringify({ compilerOptions: { strict: true } }, null, 2);
+    await writeFile(join(dir, "tsconfig.json"), originalContent);
     await init(initOpts(dir));
 
     await deinit(deinitOpts(dir));
 
-    const tsconfig = JSON.parse(readFileSync(join(dir, "tsconfig.json"), "utf-8"));
-    expect(tsconfig.compilerOptions.baseUrl).toBeUndefined();
-    expect(tsconfig.compilerOptions.paths).toBeUndefined();
-    expect(tsconfig.compilerOptions.strict).toBe(true);
+    expect(readFileSync(join(dir, "tsconfig.json"), "utf-8")).toBe(originalContent);
   });
 
   test("restores original tsconfig values from cache", async () => {
     const dir = join(tempDir, "tsconfig-restore");
     await mkdir(dir);
     await writeFile(join(dir, "package.json"), JSON.stringify({ name: "test-pkg" }, null, 2));
-    await writeFile(
-      join(dir, "tsconfig.json"),
-      JSON.stringify(
-        { compilerOptions: { baseUrl: "./src", paths: { "~/*": ["lib/*"] }, strict: true } },
-        null,
-        2
-      )
+    const originalContent = JSON.stringify(
+      { compilerOptions: { baseUrl: "./src", paths: { "~/*": ["lib/*"] }, strict: true } },
+      null,
+      2
     );
+    await writeFile(join(dir, "tsconfig.json"), originalContent);
     await init(initOpts(dir));
 
     await deinit(deinitOpts(dir));
 
-    const tsconfig = JSON.parse(readFileSync(join(dir, "tsconfig.json"), "utf-8"));
-    expect(tsconfig.compilerOptions.baseUrl).toBe("./src");
-    expect(tsconfig.compilerOptions.paths).toEqual({ "~/*": ["lib/*"] });
+    expect(readFileSync(join(dir, "tsconfig.json"), "utf-8")).toBe(originalContent);
+  });
+
+  test("round-trip preserves tsconfig formatting (single-line arrays)", async () => {
+    const dir = join(tempDir, "tsconfig-formatting");
+    await mkdir(dir);
+    await writeFile(join(dir, "package.json"), JSON.stringify({ name: "test-pkg" }, null, 2));
+    // Single-line arrays that JSON.stringify(null, 2) would reformat to multi-line
+    const originalContent =
+      '{\n  "compilerOptions": {\n    "lib": ["ESNext"],\n    "strict": true\n  }\n}';
+    await writeFile(join(dir, "tsconfig.json"), originalContent);
+
+    await init(initOpts(dir));
+    await deinit(deinitOpts(dir));
+
+    expect(readFileSync(join(dir, "tsconfig.json"), "utf-8")).toBe(originalContent);
   });
 
   test("uninstalls only deps tracked in cache", async () => {

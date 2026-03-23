@@ -120,6 +120,14 @@ describe("generatePublishWorkflow", () => {
 });
 
 describe("generateCiWorkflow", () => {
+  test("uses a single full-check job instead of separate quality and test jobs", () => {
+    const workflow = generateCiWorkflow();
+    expect(workflow).toContain("full-check:");
+    expect(workflow).toContain("bun run check:ci");
+    expect(workflow).not.toContain("quality:");
+    expect(workflow).not.toContain("run: bun test");
+  });
+
   test("uses bunx release-tools changelog for draft release", () => {
     const workflow = generateCiWorkflow();
     expect(workflow).toContain("bunx release-tools changelog");

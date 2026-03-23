@@ -87,8 +87,8 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Run full checks
-        run: bun run check
+      - name: Run project checks
+        run: bun run check:ci
 
   publish:
     runs-on: ubuntu-latest
@@ -166,7 +166,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
+  full-check:
     runs-on: ubuntu-latest
 
     steps:
@@ -180,23 +180,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run project checks
-        run: bun run check
-
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Run tests
-        run: bun test
+        run: bun run check:ci
 
   draft-release:
     runs-on: ubuntu-latest

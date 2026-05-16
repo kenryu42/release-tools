@@ -17,9 +17,11 @@ export const MANAGED_SCRIPTS: Record<string, string> = {
   knip: "knip-bun",
   lint: "biome check --write .",
   "lint:ci": "biome ci .",
-  check: "bun run typecheck && bun run knip && bun run lint && AGENT=1 bun test --coverage",
+  "check-duplicates": "bunx jscpd src tests --exitCode 1 --reporters ai",
+  check:
+    "bun run lint && bun run typecheck && bun run knip && bun run check-duplicates && bun run sg:scan && AGENT=1 bun test --coverage",
   "check:ci":
-    "bun run typecheck && bun run knip && bun run lint:ci && AGENT=1 bun test --coverage --coverage-reporter=lcov",
+    "bun run lint:ci && bun run typecheck && bun run knip && bun run check-duplicates && bun run sg:scan && AGENT=1 bun test --coverage --coverage-reporter=lcov",
   prepare: "husky",
 };
 
@@ -32,7 +34,7 @@ export const MANAGED_TSCONFIG = {
   paths: { "@/*": ["src/*"] },
 } as const;
 
-export const MANAGED_DEPS = ["husky", "lint-staged", "knip", "@biomejs/biome"] as const;
+export const MANAGED_DEPS = ["husky", "lint-staged", "knip", "@biomejs/biome", "jscpd"] as const;
 
 export interface ProjectSetupCache {
   scripts: Record<string, string | null>;

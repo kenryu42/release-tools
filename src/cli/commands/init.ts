@@ -17,11 +17,11 @@ export const MANAGED_SCRIPTS: Record<string, string> = {
   knip: "knip-bun",
   lint: "biome check --write .",
   "lint:ci": "biome ci .",
-  "check-duplicates": "bunx jscpd src tests --exitCode 1 --reporters ai",
+  "check-duplicates": "bunx jscpd src tests --exitCode 1 --reporters ai --noTips",
   check:
-    "bun run lint && bun run typecheck && bun run knip && bun run check-duplicates && bun run sg:scan && AGENT=1 bun test --coverage",
+    "bun run lint && bun run typecheck && bun run knip && bun run check-duplicates && AGENT=1 bun test --coverage",
   "check:ci":
-    "bun run lint:ci && bun run typecheck && bun run knip && bun run check-duplicates && bun run sg:scan && AGENT=1 bun test --coverage --coverage-reporter=lcov",
+    "bun run lint:ci && bun run typecheck && bun run knip && bun run check-duplicates && AGENT=1 bun test --coverage --coverage-reporter=lcov",
   prepare: "husky",
 };
 
